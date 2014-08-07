@@ -10,6 +10,7 @@ require 'pp'
 
 require './countries'
 
+require './scripts/usages'
 require './scripts/countries'
 
 
