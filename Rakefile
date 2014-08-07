@@ -8,14 +8,22 @@ require 'pp'
 ##############
 # our own code
 
+require './countries'
+
 require './scripts/countries'
 
 
 
+############################################
+# add more tasks (keep build script modular)
 
-task :cheers do |t|
-  puts 'Cheers, Prost, Salud'
+Dir.glob('./tasks/**/*.rake').each do |r|
+  puts " importing task >#{r}<..."
+  import r
+  # see blog.smartlogicsolutions.com/2009/05/26/including-external-rake-files-in-your-projects-rakefile-keep-your-rake-tasks-organized/
 end
+
+
 
 
 
