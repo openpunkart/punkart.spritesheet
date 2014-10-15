@@ -1,56 +1,46 @@
 # encoding: utf-8
 
 
-class CountryInfo
+class StateUsageLine
   attr_accessor  :name,
-                 :breweries,  ## number of breweries
-                 :breweries_year,
-                 :consumption,
-                 :consumption_year,
-                 :consumption_per_capita,
-                 :consumption_per_capita_year,
-                 :production,
-                 :production_year
+                 :breweries  ## number of breweries
 
   def initialize( name )
     @name       = name
-    @breweries              = nil
-    @breweries_year         = nil
-    @consumption            = nil
-    @consumption_year       = nil
-    @consumption_per_capita = nil
-    @consumption_per_capita_year = nil
-    @production = nil
-    @production_year = nil
+    @breweries  = 0
   end
-end # class CountryInfo
+end # class StateUsageLine
+
+class CountryUsageLine
+  attr_accessor  :name,
+                 :breweries,  ## number of breweries
+                 :states
+
+  def initialize( name )
+    @name       = name
+    @breweries  = 0
+    @states     = StateUsage.new
+  end
+end # class CountryUsageLine
 
 
-class CountryInfoStore    # find a better name ?? -use CountryInfoMap? CountryInfoCalculator/Updater/Hash/List ???
 
+class StateUsage
   def initialize( opts={} )
-    @lines = {}   # stats lines cached by country name/key
+    @lines = {}   # StatsLines cached by state name/key
   end
 
-  def update( attr, row )
-    ## for now assume matching country names and country column
-    ###  fix/todo: map country name to country key (e.g. Austria => at etc.)
-    country = row['Country']
+  def update( row )
+    state = row['state']
+    line = @lines[ state ] || StateUsageLine.new( state )
 
-    line = @lines[ country ] || CountryInfo.new( country )
+    line.breweries +=1
 
-    ## get second raw_assume it's the value
-    # note: to_i will cut off remaining e.g 12 (59) or 12 / 1 / 1
-    value   = row[1].to_i
-
-    puts "  update #{country} - #{attr} => #{value}"
-    line.send( "#{attr}=".to_sym, value )
-
-    @lines[ country ] = line
+    @lines[ state ] = line
   end
 
   def to_a
-    ## return lines sorted by consumption per capita
+    ## return lines sorted a-z
 
     # build array from hash
     ary = []
@@ -61,7 +51,50 @@ class CountryInfoStore    # find a better name ?? -use CountryInfoMap? CountryIn
     ## for now sort just by name (a-z)
     ary.sort! do |l,r|
       ## note: reverse order (thus, change l,r to r,l)
-      value = r.consumption_per_capita <=> l.consumption_per_capita
+      value = r.breweries <=> l.breweries
+      value = l.name <=> r.name            if value == 0
+      value
+    end
+
+    ary
+  end  # to_a
+end
+
+class CountryUsage
+
+  def initialize( opts={} )
+    @lines = {}   # StatssLines cached by country name/key
+  end
+
+  def update( row )
+    country = row['country']
+    line = @lines[ country ] || CountryUsageLine.new( country )
+
+    line.breweries +=1
+
+    state = row['state']
+    if state.nil?
+      ## do nothing for now (add to uncategorized state ???)
+    else
+      line.states.update( row )   ## also track states e.g texas, california (US) etc.
+    end
+
+    @lines[ country ] = line
+  end
+
+  def to_a
+    ## return lines sorted a-z
+
+    # build array from hash
+    ary = []
+    @lines.each do |k,v|
+      ary << v
+    end
+
+    ## for now sort just by name (a-z)
+    ary.sort! do |l,r|
+      ## note: reverse order (thus, change l,r to r,l)
+      value = r.breweries <=> l.breweries
       value = l.name <=> r.name            if value == 0
       value
     end
@@ -70,5 +103,5 @@ class CountryInfoStore    # find a better name ?? -use CountryInfoMap? CountryIn
   end  # to_a
 
 
-end # class CountryInfoStore
+end # class CountryUsage
 
