@@ -3,7 +3,13 @@
 
 class Brewery
 
-  attr_reader :name
+  attr_reader :name,
+              :address1,
+              :address2,
+              :city,
+              :state,
+              :code,  # postal code
+              :website
 
   def initialize
     # do nothing for now

@@ -3,6 +3,7 @@
 
 require 'csv'
 require 'pp'
+require 'fileutils'
 
 
 ##############
@@ -25,6 +26,10 @@ Dir.glob('./tasks/**/*.rake').each do |r|
 end
 
 
+
+##
+# note/todo:
+##  breweries - same name possible for record!! - add city to make "unique"
 
 task :by do |t|    # check breweries file
   in_path = './dl/breweries.csv'     ## 1414 rows
@@ -75,7 +80,7 @@ task :by do |t|    # check breweries file
     print '%-30s ' % c.name
     print ' :: %4d breweries' % c.count
     print "\n"
-    
+        
     ## check for states:
     states_ary = c.states.to_a
     if states_ary.size > 0
@@ -85,10 +90,58 @@ task :by do |t|    # check breweries file
           print '%-30s ' % state.name
           print '   :: %4d breweries' % state.count
           print "\n"
-          
+
+          if c.name == 'United States'
+            # map file name
+            us_root = './o/us-united-states'
+            ## us_root = '../us-united-states'
+            us_state_dir = US_STATES[ state.name ]
+
+            path = "#{us_root}/#{us_state_dir}/breweries.csv"
+            ### make path
+            puts "path=>#{path}<"
+
+            FileUtils.mkdir_p(File.dirname(path))   unless File.exists?(File.dirname(path))
+
+            File.open( path, 'w') do |file|
+              
+              ## write csv headers
+              file.puts ['Name','Address1', 'Address2', 'City', 'State', 'Code', 'Website'].join(',')
+             
+              ## write records
+              state.breweries.each do |by|
+              
+                name      = by.name
+                ## NOTE: replace commas in address line w/ pipe (|)
+                address1  = by.address1 ? by.address1.gsub(',',' |') : '?'
+                address2  = by.address2 ? by.address2.gsub(',',' |') : '?'
+                city      = by.city     ? by.city : '?'
+                state     = if by.state
+                              ## NOTE: us-specific ??   map us states to two-letter abbrev
+                              US_STATES_MAPPING[ by.state ].upcase
+                            else
+                              '?'
+                            end
+                code      = by.code     ? by.code : '?'
+                website   = if by.website
+                              ## NOTE: cleanup url - remove leading http:// or https://
+                              website = by.website
+                              website = website.sub( /^(http|https):\/\//, '' )
+                              website = website.sub( /\/$/, '' )  # remove trailing slash (/)
+                            else
+                              '?'
+                            end
+             
+                file.puts [name,address1,address2,city,state,code,website].join(',')
+              end
+            end
+          end
+
           ## state.dump  # dump breweries
       end
     end
+
+
   end
 
   puts 'done'
