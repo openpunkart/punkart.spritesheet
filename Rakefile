@@ -15,7 +15,10 @@ require './country_be'
 
 
 require './scripts/countries'
+
 require './scripts/breweries'
+require './scripts/beers'
+require './scripts/list'
 
 
 
@@ -27,6 +30,196 @@ Dir.glob('./tasks/**/*.rake').each do |r|
   import r
   # see blog.smartlogicsolutions.com/2009/05/26/including-external-rake-files-in-your-projects-rakefile-keep-your-rake-tasks-organized/
 end
+
+
+task :repairb do |t|
+
+  ## clean/repair beers.csv
+
+  in_path  = "./dl/beers.csv"
+  out_path = "./o/beers.csv"
+
+  i = 0
+ 
+  File.open( out_path, 'w') do |out|
+    File.open( in_path, 'r' ).each_line do |line|
+      i += 1
+      if i % 100
+        print '.'
+      end
+
+      if line =~ /^"id",/   # header
+         out.puts line
+      elsif line =~ /^"+\d+"+,/    # e.g. "5445" or ""5445"",  assume new record
+         line = line.sub( /,+$/,'' )   # remove trailing commas ,,,,,,
+         line = line.sub( /^"{2,}(\d+)"{2,},/, '"\1",' )   # simplify  # ""4216""" to "4216"
+
+         ## remove pictures/filepath entries
+         line = line.sub( /\"[A-Za-z0-9_\-]+\.(jpg|png)\"/, '' )   # e.g. "hudson.jpg" 
+
+         ## remove last columns
+         ## "0","0",,"Our 
+         ## "13","0",,"Our
+         ## "13.1","17.4",,"Our 
+         ## "0","0",,,"2010-
+
+         ## note: keep "0,"0" - just cut of the rest
+         line = line.sub( /(\"[0-9.]+\",\"[0-9.]+\"),,+\".+$/, '\1' )
+         ## line = line.sub( /\"0\",\"0\",,,\"2010.+$/, '' )
+
+         out.puts line
+      else
+         # skip descr lines
+      end
+    end
+  end
+end
+
+task :repairby do |t|
+
+  ## clean/repair breweries.csv
+
+  in_path  = "./dl/breweries.csv"
+  out_path = "./o/breweries.csv"
+
+  i = 0
+ 
+  File.open( out_path, 'w') do |out|
+    File.open( in_path, 'r' ).each_line do |line|
+      i += 1
+      if i % 100
+        print '.'
+      end
+
+      if line =~ /^"id",/    # header
+        out.puts line
+      elsif line =~ /^"+\d+"+,/   # e.g. "5445" or ""5445"",  assume new record
+
+         ## remove last col timestamp
+         ## eg ,"2010-07-22 20:00:20"
+         line = line.sub( /,\"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\"$/, '' )
+
+         ## remove everything after incl. filpath entry
+         ## remove pictures/filepath entries
+         line = line.sub( /\"[A-Za-z0-9_\-\.]+\.(jpg|png|gif)\".+$/, ',' )   # e.g. "hudson.jpg" # note: keep comma
+
+         ## remove everything after url entry
+         ##  e.g. "http://www.schlafly.com" or
+         ##  "http://www.hertogjan.nl/site/"
+         line = line.sub( /(,\"http:\/\/[^\"]+\",+).+$/, ',\1')   # note: keep commas
+
+         ## remove remain desc  / last column - MUST NOT be followed by comma
+         
+         ###
+         ## check if line ends with ,,,
+         ##   no more desc to cleanup -yeah
+         ## if not
+         ##   cut-off starting from end-of-line until we hit ,,"
+
+         # line = line.sub( /,,,\".+$/ ) do |m|
+         #  ## ends with comma ? - do NOT replace
+         #   #code
+         #   # m
+         # end
+
+         out.puts line
+      else
+         # skip descr lines
+      end
+    end
+  end
+
+
+
+
+end  # task repair
+
+
+
+task :cut do |t|
+
+  in_root = './dl/fixed'
+  out_root = './o'
+
+  datasets = [
+#    [ 'breweries', [0,1,2,3,4,5,6,7,9] ],  # skip phone(8) col too
+    [ 'beers', [0,1,2] ],
+  ]
+
+  datasets.each do |dataset|
+     name       = dataset[0]
+     cols       = dataset[1]
+
+     in_path   = "#{in_root}/#{name}.csv"
+     out_path  = "#{out_root}/#{name}.csv"
+
+     cut_csv( in_path, out_path, cols )
+  end
+end
+
+
+def cut_csv( in_path, out_path, cols )
+  puts "## cutting >>#{in_path}<< to >>#{out_path}<<..."
+
+  ## try a dry test run
+  i = 0
+  CSV.foreach( in_path, headers: true ) do |row|
+    i += 1
+    puts row.inspect   if i == 1   ## for debugging print first row
+
+    print '.' if i % 100 == 0
+  end
+  puts " #{i} rows"
+
+
+  ### make sure out_root path exists
+  FileUtils.mkdir_p( File.dirname( out_path ))   unless Dir.exists?( File.dirname( out_path ))
+
+  ### load all-at-once for now
+  table = CSV.read( in_path, headers: true )
+
+  ## 1) get headers
+  headers = []
+  cols.each do |col|
+    headers << table.headers[col]
+  end
+
+  ## 2) get records (recs)
+  recs = []
+  i = 0
+  table.each do |row|
+    print '.' if i % 100
+
+    rec = []
+    cols.each do |col|
+      rec << row[col]
+    end
+    recs << rec
+  end
+
+  pp headers
+
+  ## NOTE: do NOT forget to escape commas !!! in cols/recs
+  ##  use CSV to handle heavy lifting
+
+  CSV.open( out_path, 'w' ) do |csv|
+    csv << headers # headers line
+    ## all recs
+    recs.each do |rec|
+      csv << rec
+    end
+  end
+
+  # File.open( out_path, 'w' ) do |out|
+  #  out.puts headers.join(',') # headers line
+  #  ## all recs
+  #  recs.each do |rec|
+  #     out.puts rec.join(',')
+  #  end
+  #end
+end  # method cut_csv
+
+
 
 
 def read_brewery_rows
@@ -49,6 +242,24 @@ def read_brewery_rows
   hash  # return brewery map indexed by id
 end
 
+
+task :addr do |t|
+  ## check address2 - if used at all ?
+  in_path = './dl/breweries.csv'     ## 1414 rows
+
+  ## try a dry test run
+  i = 0
+  CSV.foreach( in_path, headers: true ) do |row|
+    i += 1
+    print '.' if i % 100 == 0
+
+    address2 = row['address2']
+    if address2
+      puts "#{i} => >#{address2}<"
+    end
+  end
+  puts " #{i} rows"
+end
 
 
 ##
@@ -121,8 +332,8 @@ task :by do |t|    # check breweries file
 
           if c.name == 'United States'
             # map file name
-            us_root = './o/us-united-states'
-            ## us_root = '../us-united-states'
+            ## us_root = './o/us-united-states'
+            us_root = '../us-united-states'
             us_state_dir = US_STATES[ state.name ]
 
             path = "#{us_root}/#{us_state_dir}/breweries.csv"
@@ -130,8 +341,8 @@ task :by do |t|    # check breweries file
             save_breweries( path, state.breweries )
           elsif c.name == 'Belgium'
             # map file name
-            be_root = './o/be-belgium'
-            ## be_root = '../be-belgium'
+            ## be_root = './o/be-belgium'
+            be_root = '../be-belgium'
             be_state_dir = BE_STATES[ state.name ]
 
             path = "#{be_root}/#{be_state_dir}/breweries.csv"
@@ -224,7 +435,7 @@ task :b do |t|    # check beers file
   bymap = read_brewery_rows()
   
   
-  in_path = './dl/beers.csv'     ## 5861 rows
+  in_path = './o/beers.csv'     ##  repaired  5901 rows (NOT repaired 5861 rows)
 
   ## try a dry test run
 
