@@ -10,6 +10,9 @@ require 'fileutils'
 # our own code
 
 require './countries'
+require './country_us'
+require './country_be'
+
 
 require './scripts/countries'
 require './scripts/breweries'
@@ -23,6 +26,27 @@ Dir.glob('./tasks/**/*.rake').each do |r|
   puts " importing task >#{r}<..."
   import r
   # see blog.smartlogicsolutions.com/2009/05/26/including-external-rake-files-in-your-projects-rakefile-keep-your-rake-tasks-organized/
+end
+
+
+def read_brewery_rows
+  hash = {}
+
+  in_path = './dl/breweries.csv'     ## 1414 rows
+
+  ## try a dry test run
+  i = 0
+  CSV.foreach( in_path, headers: true ) do |row|
+    i += 1
+    print '.' if i % 100 == 0
+    
+    by = Brewery.new
+    by.from_row( row )
+    hash[ row['id'] ] = by  ## index by id
+  end
+  puts " #{i} rows"
+  
+  hash  # return brewery map indexed by id
 end
 
 
@@ -58,6 +82,10 @@ task :by do |t|    # check breweries file
 
     if state.nil? && country == 'United States'
       puts " *** row #{i} - united states - state is nil; #{row.inspect}\n\n"
+    end
+
+    if state.nil? && country == 'Belgium'
+      puts " *** row #{i} - belgium - state is nil; #{row.inspect}\n\n"
     end
 
     country_list.update( row )
@@ -98,43 +126,19 @@ task :by do |t|    # check breweries file
             us_state_dir = US_STATES[ state.name ]
 
             path = "#{us_root}/#{us_state_dir}/breweries.csv"
-            ### make path
-            puts "path=>#{path}<"
+            
+            save_breweries( path, state.breweries )
+          elsif c.name == 'Belgium'
+            # map file name
+            be_root = './o/be-belgium'
+            ## be_root = '../be-belgium'
+            be_state_dir = BE_STATES[ state.name ]
 
-            FileUtils.mkdir_p(File.dirname(path))   unless File.exists?(File.dirname(path))
+            path = "#{be_root}/#{be_state_dir}/breweries.csv"
 
-            File.open( path, 'w') do |file|
-              
-              ## write csv headers
-              file.puts ['Name','Address1', 'Address2', 'City', 'State', 'Code', 'Website'].join(',')
-             
-              ## write records
-              state.breweries.each do |by|
-              
-                name      = by.name
-                ## NOTE: replace commas in address line w/ pipe (|)
-                address1  = by.address1 ? by.address1.gsub(',',' |') : '?'
-                address2  = by.address2 ? by.address2.gsub(',',' |') : '?'
-                city      = by.city     ? by.city : '?'
-                state     = if by.state
-                              ## NOTE: us-specific ??   map us states to two-letter abbrev
-                              US_STATES_MAPPING[ by.state ].upcase
-                            else
-                              '?'
-                            end
-                code      = by.code     ? by.code : '?'
-                website   = if by.website
-                              ## NOTE: cleanup url - remove leading http:// or https://
-                              website = by.website
-                              website = website.sub( /^(http|https):\/\//, '' )
-                              website = website.sub( /\/$/, '' )  # remove trailing slash (/)
-                            else
-                              '?'
-                            end
-             
-                file.puts [name,address1,address2,city,state,code,website].join(',')
-              end
-            end
+            save_breweries( path, state.breweries )
+          else
+            # undefined country; do nothing
           end
 
           ## state.dump  # dump breweries
@@ -217,6 +221,9 @@ end
 
 
 task :b do |t|    # check beers file
+  bymap = read_brewery_rows()
+  
+  
   in_path = './dl/beers.csv'     ## 5861 rows
 
   ## try a dry test run
@@ -225,6 +232,18 @@ task :b do |t|    # check beers file
   CSV.foreach( in_path, headers: true ) do |row|
     i += 1
     print '.' if i % 100 == 0
+    
+    brewery_id = row['brewery_id']
+    by = bymap[brewery_id]
+    if by
+      b = Beer.new
+      b.brewery = by
+      b.from_row( row )
+    else
+      puts "** brewery #{i} with id >#{brewery_id}< not found; skipping beer row:"
+      pp row
+    end
+    
   end
   puts " #{i} rows"
 end
