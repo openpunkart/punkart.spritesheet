@@ -39,8 +39,13 @@ task :repairb do |t|
   in_path  = "./dl/beers.csv"
   out_path = "./o/beers.csv"
 
-  i = 0
- 
+  ## columns
+  ##  "id","brewery_id","name",
+  #     "cat_id","style_id",
+  #     "abv","ibu","srm","upc",
+  #     "filepath","descript","last_mod"
+
+  i = 0 
   File.open( out_path, 'w') do |out|
     File.open( in_path, 'r' ).each_line do |line|
       i += 1
@@ -49,23 +54,30 @@ task :repairb do |t|
       end
 
       if line =~ /^"id",/   # header
+         ## cut-off last columns
+         line = line.sub( /,\"upc\",\"filepath\",\"descript\",\"last_mod\",+$/, '') 
          out.puts line
       elsif line =~ /^"+\d+"+,/    # e.g. "5445" or ""5445"",  assume new record
          line = line.sub( /,+$/,'' )   # remove trailing commas ,,,,,,
          line = line.sub( /^"{2,}(\d+)"{2,},/, '"\1",' )   # simplify  # ""4216""" to "4216"
 
-         ## remove pictures/filepath entries
-         line = line.sub( /\"[A-Za-z0-9_\-]+\.(jpg|png)\"/, '' )   # e.g. "hudson.jpg" 
+         ## remove last col timestamp
+         ## eg ,"2010-07-22 20:00:20"
+         line = line.sub( /,\"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\"$/, '' )
 
-         ## remove last columns
+         ## remove pictures/filepath entries
+         # e.g. "hudson.jpg"
+         # note: keep komma
+         line = line.sub( /\"[A-Za-z0-9_\-]+\.(jpg|png)\"/, '' )
+
+         ## finally remove last columns (that is, descript), assumes upc is always empty !!
          ## "0","0",,"Our 
          ## "13","0",,"Our
          ## "13.1","17.4",,"Our 
          ## "0","0",,,"2010-
 
          ## note: keep "0,"0" - just cut of the rest
-         line = line.sub( /(\"[0-9.]+\",\"[0-9.]+\"),,+\".+$/, '\1' )
-         ## line = line.sub( /\"0\",\"0\",,,\"2010.+$/, '' )
+         line = line.sub( /(\"[0-9.]+\",\"[0-9.]+\"),,+(\".+)?$/, '\1' )
 
          out.puts line
       else
@@ -79,11 +91,20 @@ task :repairby do |t|
 
   ## clean/repair breweries.csv
 
+  # remove entries ??
+  #  "1174","357",,,,,,,,,,
+  #   check for (Closed)   ????
+
   in_path  = "./dl/breweries.csv"
   out_path = "./o/breweries.csv"
 
+  ## columns
+  # "id","name",
+  #   "address1","address2","city","state","code","country",
+  #   "phone","website",
+  #   "filepath","descript","last_mod"
+
   i = 0
- 
   File.open( out_path, 'w') do |out|
     File.open( in_path, 'r' ).each_line do |line|
       i += 1
@@ -92,7 +113,9 @@ task :repairby do |t|
       end
 
       if line =~ /^"id",/    # header
-        out.puts line
+         ## cut-off last columns
+         line = line.sub( /,\"filepath\",\"descript\",\"last_mod\"/, '' )
+         out.puts line
       elsif line =~ /^"+\d+"+,/   # e.g. "5445" or ""5445"",  assume new record
 
          ## remove last col timestamp
@@ -100,27 +123,29 @@ task :repairby do |t|
          line = line.sub( /,\"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\"$/, '' )
 
          ## remove everything after incl. filpath entry
-         ## remove pictures/filepath entries
-         line = line.sub( /\"[A-Za-z0-9_\-\.]+\.(jpg|png|gif)\".+$/, ',' )   # e.g. "hudson.jpg" # note: keep comma
+         ## remove pictures/filepath entries e.g. "hudson.jpg"
+         ## note: keep comma
+         line = line.sub( /\"[A-Za-z0-9_\-\.]+\.(jpg|png|gif)\".+$/, ',' )
 
          ## remove everything after url entry
          ##  e.g. "http://www.schlafly.com" or
          ##  "http://www.hertogjan.nl/site/"
-         line = line.sub( /(,\"http:\/\/[^\"]+\",+).+$/, ',\1')   # note: keep commas
+         ##  note: keep commas
+         line = line.sub( /(,\"http:\/\/[^\"]+\",+).+$/, ',\1')
+
 
          ## remove remain desc  / last column - MUST NOT be followed by comma
-         
-         ###
          ## check if line ends with ,,,
-         ##   no more desc to cleanup -yeah
-         ## if not
-         ##   cut-off starting from end-of-line until we hit ,,"
-
-         # line = line.sub( /,,,\".+$/ ) do |m|
-         #  ## ends with comma ? - do NOT replace
-         #   #code
-         #   # m
-         # end
+         ##   no more desc to cleanup -yeah         
+         if line =~ /,+$/
+           # do nothing
+         else
+           ##   cut-off starting from end-of-line until we hit ,,"
+           pos = line.rindex( ',,"' )   #  find last occurence
+           if pos
+             line = line[0..pos]
+           end
+         end
 
          out.puts line
       else
@@ -128,13 +153,15 @@ task :repairby do |t|
       end
     end
   end
-
-
-
-
 end  # task repair
 
+task :repair => [:repairb,:repairby] do
+end
 
+
+
+#######################
+# move to tasks
 
 task :cut do |t|
 
@@ -225,7 +252,7 @@ end  # method cut_csv
 def read_brewery_rows
   hash = {}
 
-  in_path = './dl/breweries.csv'     ## 1414 rows
+  in_path = './o/breweries.csv'     ## 1414 rows
 
   ## try a dry test run
   i = 0
@@ -245,7 +272,7 @@ end
 
 task :addr do |t|
   ## check address2 - if used at all ?
-  in_path = './dl/breweries.csv'     ## 1414 rows
+  in_path = './o/breweries.csv'     ## 1414 rows
 
   ## try a dry test run
   i = 0
@@ -267,7 +294,7 @@ end
 ##  breweries - same name possible for record!! - add city to make "unique"
 
 task :by do |t|    # check breweries file
-  in_path = './dl/breweries.csv'     ## 1414 rows
+  in_path = './o/breweries.csv'     ## 1414 rows
 
   ## try a dry test run
   i = 0
@@ -365,7 +392,7 @@ end
 
 
 task :bycheck do |t|    # check breweries file
-  in_path = './dl/breweries.csv'     ## 1414 rows
+  in_path = './o/breweries.csv'     ## 1414 rows
 
   ## try a dry test run
   i = 0
@@ -433,11 +460,10 @@ end
 
 task :b do |t|    # check beers file
   bymap = read_brewery_rows()
-  
-  
+
   in_path = './o/beers.csv'     ##  repaired  5901 rows (NOT repaired 5861 rows)
 
-  ## try a dry test run
+  country_list = CountryList.new
 
   i = 0
   CSV.foreach( in_path, headers: true ) do |row|
@@ -450,12 +476,86 @@ task :b do |t|    # check beers file
       b = Beer.new
       b.brewery = by
       b.from_row( row )
+
+      country = by.country
+      state   = by.state
+      if country.nil? && country == '?'
+        puts " *** row #{i} - country is nil; skipping: #{row.inspect}\n\n"
+        next  ## skip line; issue warning
+      end
+
+      if (state.nil? || state == '?') && country == 'United States'
+        puts " *** row #{i} - united states - state is nil; #{row.inspect}\n\n"
+      end
+
+      if (state.nil? || state == '?') && country == 'Belgium'
+        puts " *** row #{i} - belgium - state is nil; #{row.inspect}\n\n"
+      end
+
+      country_list.update_beer( b )
     else
       puts "** brewery #{i} with id >#{brewery_id}< not found; skipping beer row:"
       pp row
     end
-    
   end
   puts " #{i} rows"
-end
+
+
+  ### pp usage.to_a
+
+  puts "\n\n"
+  puts "## Country stats:"
+
+  ary = country_list.to_a
+
+  puts "  #{ary.size} countries"
+  puts ""
+
+  ary.each_with_index do |c,j|
+    print '%5s ' % "[#{j+1}]"
+    print '%-30s ' % c.name
+    print ' :: %4d beers' % c.count
+    print "\n"
+        
+    ## check for states:
+    states_ary = c.states.to_a
+    if states_ary.size > 0
+      puts "   #{states_ary.size} states:"
+      states_ary.each_with_index do |state,k|
+          print '   %5s ' % "[#{k+1}]"
+          print '%-30s ' % state.name
+          print '   :: %4d beers' % state.count
+          print "\n"
+
+          if c.name == 'United States'
+            # map file name
+            us_root = './o/us-united-states'
+            ## us_root = '../us-united-states'
+            us_state_dir = US_STATES[ state.name ]
+
+            path = "#{us_root}/#{us_state_dir}/beers.csv"
+            
+            save_beers( path, state.beers )
+          elsif c.name == 'Belgium'
+            # map file name
+            be_root = './o/be-belgium'
+            ## be_root = '../be-belgium'
+            be_state_dir = BE_STATES[ state.name ]
+
+            path = "#{be_root}/#{be_state_dir}/beers.csv"
+
+            save_beers( path, state.beers )
+          else
+            # undefined country; do nothing
+          end
+
+          ## state.dump  # dump breweries
+      end
+    end
+
+
+  end
+
+  puts 'done'
+end  # task :b
 

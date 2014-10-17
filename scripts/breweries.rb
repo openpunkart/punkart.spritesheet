@@ -7,6 +7,13 @@ def save_breweries( path, breweries )
 
   FileUtils.mkdir_p(File.dirname(path))   unless File.exists?(File.dirname(path))
 
+  # sort breweries by name, city
+  breweries.sort! do |l,r|
+    value = l.name <=> r.name
+    value = l.city <=> r.city   if value == 0
+    value
+  end
+
   File.open( path, 'w' ) do |file|
     ## write csv headers
     file.puts ['Name','Address', 'City', 'State', 'Code', 'Website'].join(',')

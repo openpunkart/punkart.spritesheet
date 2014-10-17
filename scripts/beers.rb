@@ -1,5 +1,30 @@
 # encoding: utf-8
 
+def save_beers( path, beers )
+  ### make path
+  puts "path=>#{path}<"
+
+  FileUtils.mkdir_p(File.dirname(path))   unless File.exists?(File.dirname(path))
+
+  # sort beers by brewery, city, name  
+  beers.sort! do |l,r|
+    value = l.brewery.name <=> r.brewery.name
+    value = l.brewery.city <=> r.brewery.city   if value == 0
+    value = l.name         <=> r.name           if value == 0
+    value
+  end
+
+  File.open( path, 'w' ) do |file|
+    ## write csv headers
+    file.puts ['Brewery','City', 'Name', 'Tags'].join(',')
+
+    ## write records
+    beers.each do |b|
+      file.puts [b.brewery.name,b.brewery.city,b.name,'?'].join(',')
+    end
+  end
+end  # method save_beers
+
 
 class Beer
   attr_accessor :brewery

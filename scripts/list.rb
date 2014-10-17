@@ -40,7 +40,25 @@ class StateList
     @lines = {}   # StatsLines cached by state name/key
   end
 
-  def update( row )
+  def update_beer( b )
+    country = b.brewery.country
+    state   = b.brewery.state.downcase   # todo: check for nil?
+   
+    if country == 'United States' || country == 'Belgium'
+      puts " update_beer  #{state} / #{country}"
+    end
+
+    if state && state != '?'
+      line = @lines[ state ] || StateItem.new( state )
+
+      line.count +=1
+      line.beers << b
+
+      @lines[ state ] = line
+    end
+  end
+
+  def update_brewery( by )
 
     country = row['country']
     state   = row['state']
@@ -112,7 +130,7 @@ class CountryList
     line.count +=1
     
     state = b.brewery.state
-    if state.nil?
+    if state.nil? || state == '?'
       ## do nothing for now (add to uncategorized state ???)
     else
       line.states.update_beer( b )   ## also track states e.g texas, california (US) etc.
