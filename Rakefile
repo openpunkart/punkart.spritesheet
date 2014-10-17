@@ -94,7 +94,13 @@ task :by do |t|    # check breweries file
       puts " *** row #{i} - belgium - state is nil; #{row.inspect}\n\n"
     end
 
-    country_list.update( row )
+    by = Brewery.new.from_row( row )
+    if by.closed?
+      puts "*** row #{i} - skip closed brewery >#{by.name}<"
+      next ## skip closed breweries; issue warning
+    end
+
+    country_list.update_brewery( by )
   end
 
 
@@ -129,20 +135,26 @@ task :by do |t|    # check breweries file
             # map file name
             ## us_root = './o/us-united-states'
             us_root = '../us-united-states'
-            us_state_dir = US_STATES[ state.name ]
+            us_state_dir = US_STATES[ state.name.downcase ]
 
-            path = "#{us_root}/#{us_state_dir}/breweries.csv"
-            
-            save_breweries( path, state.breweries )
+            if us_state_dir
+              path = "#{us_root}/#{us_state_dir}/breweries.csv"
+              save_breweries( path, state.breweries )
+            else
+              puts "*** warn: no state mapping defined for >#{state.name}<"
+            end
           elsif c.name == 'Belgium'
             # map file name
             ## be_root = './o/be-belgium'
             be_root = '../be-belgium'
-            be_state_dir = BE_STATES[ state.name ]
+            be_state_dir = BE_STATES[ state.name.downcase ]
 
-            path = "#{be_root}/#{be_state_dir}/breweries.csv"
-
-            save_breweries( path, state.breweries )
+            if be_state_dir
+              path = "#{be_root}/#{be_state_dir}/breweries.csv"
+              save_breweries( path, state.breweries )
+            else
+              puts "*** warn: no state mapping defined for >#{state.name}<"
+            end
           else
             # undefined country; do nothing
           end
@@ -297,22 +309,28 @@ task :b do |t|    # check beers file
 
           if c.name == 'United States'
             # map file name
-            us_root = './o/us-united-states'
-            ## us_root = '../us-united-states'
-            us_state_dir = US_STATES[ state.name ]
+            ## us_root = './o/us-united-states'
+            us_root = '../us-united-states'
+            us_state_dir = US_STATES[ state.name.downcase ]
 
-            path = "#{us_root}/#{us_state_dir}/beers.csv"
-            
-            save_beers( path, state.beers )
+            if us_state_dir
+              path = "#{us_root}/#{us_state_dir}/beers.csv"
+              save_beers( path, state.beers )
+            else
+              puts "*** warn: no state mapping defined for >#{state.name}<"
+            end
           elsif c.name == 'Belgium'
             # map file name
-            be_root = './o/be-belgium'
-            ## be_root = '../be-belgium'
-            be_state_dir = BE_STATES[ state.name ]
+            ## be_root = './o/be-belgium'
+            be_root = '../be-belgium'
+            be_state_dir = BE_STATES[ state.name.downcase ]
 
-            path = "#{be_root}/#{be_state_dir}/beers.csv"
-
-            save_beers( path, state.beers )
+            if be_state_dir
+              path = "#{be_root}/#{be_state_dir}/beers.csv"
+              save_beers( path, state.beers )
+            else
+              puts "*** warn: no state mapping defined for >#{state.name}<"
+            end
           else
             # undefined country; do nothing
           end

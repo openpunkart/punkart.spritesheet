@@ -12,11 +12,12 @@ class StateItem
     @beers      = []
   end
   
-  def dump
-    @breweries.each_with_index do |by,i|
-      puts "[#{i+1}/#{@breweries.size}]   #{by.name}"
-    end
-  end
+#  def dump
+#    @breweries.each_with_index do |by,i|
+#      puts "[#{i+1}/#{@breweries.size}]   #{by.name}"
+#    end
+#  end
+
 end # class StateItem
 
 
@@ -59,34 +60,8 @@ class StateList
   end
 
   def update_brewery( by )
-
-    country = row['country']
-    state   = row['state']
-
-    ## map/unify us states
-    if country == 'United States'
-      state = US_STATES_MAPPING[state]
-      
-      if state.nil?
-        puts "*** skip unkown us state >#{row['state']}<; no mapping found"
-        return
-      end
-    elsif country == 'Belgium'
-      state = BE_STATES_MAPPING[state]
-      
-      if state.nil?
-        puts "*** skip unkown belgium state/region >#{row['state']}<; no mapping found"
-        return
-      end
-    else
-      ## no mapping defined
-    end
-
-    by = Brewery.new.from_row( row )
-    if by.closed?
-      puts "*** skip closed brewery >#{by.name}<"
-      return
-    end
+    ## country = by.country
+    state   = by.state
 
     line = @lines[ state ] || StateItem.new( state )
 
@@ -139,18 +114,16 @@ class CountryList
     @lines[ country ] = line
   end
 
-  ## fix: rename to update_brewery( by )
-  def update( row )
-    country = row['country']
+  def update_brewery( by )
+    country = by.country
     line = @lines[ country ] || CountryItem.new( country )
-
     line.count +=1
 
-    state = row['state']
-    if state.nil?
+    state = by.state
+    if state.nil? || state == '?'
       ## do nothing for now (add to uncategorized state ???)
     else
-      line.states.update( row )   ## also track states e.g texas, california (US) etc.
+      line.states.update_brewery( by )   ## also track states e.g texas, california (US) etc.
     end
 
     @lines[ country ] = line
