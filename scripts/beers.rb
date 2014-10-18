@@ -16,18 +16,24 @@ def save_beers( path, beers )
 
   File.open( path, 'w' ) do |file|
     ## write csv headers
-    file.puts ['Brewery','City', 'Name', 'Tags'].join(',')
+    file.puts ['Brewery','City', 'Name', 'Abv', 'Ibu', 'Srm', 'Tags'].join(',')
 
     ## write records
     beers.each do |b|
-      file.puts [b.brewery.name,b.brewery.city,b.name,'?'].join(',')
+      file.puts [b.brewery.name,b.brewery.city,b.name,
+                 b.abv ? "#{b.abv}%" : '?',
+                 b.ibu ? b.ibu : '?',
+                 b.srm ? b.srm : '?',
+                 b.tags].join(',')
     end
   end
 end  # method save_beers
 
 
 class Beer
-  attr_accessor :brewery
+  attr_accessor :brewery,
+                :cat,    # beer category
+                :style  # beer style (subcategory)
 
   attr_reader :name,
               :abv,
@@ -37,8 +43,18 @@ class Beer
               :cat,
               :style
 
+  def tags
+    if @style && @cat
+      "#{@cat.name}|#{@style.name}".downcase.gsub( /[ \-\/]/, '_' ).gsub( '[\(\)]', '' )
+    else
+      '?'
+    end
+  end
+
   def initialize
     @brewery = nil
+    @cat     = nil
+    @style   = nil
   end
 
   def from_row( row )
@@ -58,13 +74,19 @@ class Beer
 #    "-1","-1",
 #    "6.7","0","0","0",,,"2010-07-22 20:00:20"
 
-    @name   = row['name']
-
     ## NOTE: replace commas in name, addresses w/ pipe (|)
-    @name   = @name.gsub(',',' |')
+    @name   = row['name'].gsub(',',' |')
+
+    @abv    = row['abv']
+    @abv = nil   if @abv == '0'
+
+    @ibu    = row['ibu']
+    @ibu = nil   if @ibu == '0'
+
+    @srm    = row['srm']
+    @srm = nil   if @srm == '0'
 
     self   # NOTE: return self (to allow method chaining)
   end  
 end  # class Beer
-
 

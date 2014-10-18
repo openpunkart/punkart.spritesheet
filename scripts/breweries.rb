@@ -1,6 +1,26 @@
 # encoding: utf-8
 
 
+def read_brewery_rows( path )
+  hash = {}
+
+  ## try a dry test run
+  i = 0
+  CSV.foreach( path, headers: true ) do |row|
+    i += 1
+    print '.' if i % 100 == 0
+
+    by = Brewery.new
+    by.from_row( row )
+    hash[ row['id'] ] = by  ## index by id
+  end
+  puts " #{i} rows"
+  
+  hash  # return brewery map indexed by id
+end
+
+
+
 def save_breweries( path, breweries )
   ### make path
   puts "path=>#{path}<"

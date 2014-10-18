@@ -87,6 +87,30 @@ task :repairby do |t|
         print '.'
       end
 
+     ## todo: fix encoding ?? is windows cp850 ???
+     ##
+
+##
+## check - augustiner bräu  - missing too Strae => Straße
+##  eg . "Augustiner-BrÃ¤u MÃ¼nchen","Landsberger Strae 35",,"MÃ¼nchen","Bayern",,"Germany","49-(0)89-/-519940","http://www.augustiner-braeu.de",,
+
+     ## fix: char non-ascii encoding  - what encoding gets used ??
+     ##  add more/missing non-ascii chars
+     ## line = line.gsub( 'Ã¤', 'ä' )
+     ## line = line.gsub( 'Ã¼', 'ü' )
+     ##  line = line.gsub( 'Ã¶', 'ö' )
+     ## line = line.gsub( 'Ã¡', 'á' )
+     ## line = line.gsub( 'Ã¶', 'ő' )
+     ## line = line.gsub( 'Å‚', 'ł' )  ##  NamysÅ‚Ã³w  =>  Namysłów
+     ## line = line.gsub( 'Ã³', 'ó' )  ##  NamysÅ‚Ã³w  =>  Namysłów
+     ## line = line.gsub( 'Ã­', 'í' )  ##  CervecerÃ­a => cervecería  
+
+##
+# fix: cuvee  -- non-ascii missing
+# Brasserie-Brouwerij Cantillon,Anderlecht,CuvÃ©e des Champions 2003-2004,belgian_and_french_ale|belgian_style_fruit_lambic
+## Brasserie-Brouwerij Cantillon,Anderlecht,RosÃ© de Gambrinus,belgian_and_french_ale|belgian_style_fruit_lambic
+
+
       if line =~ /^"id",/    # header
          ## cut-off last columns
          line = line.sub( /,\"filepath\",\"descript\",\"last_mod\"/, '' )
@@ -100,13 +124,13 @@ task :repairby do |t|
          ## remove everything after incl. filpath entry
          ## remove pictures/filepath entries e.g. "hudson.jpg"
          ## note: keep comma
-         line = line.sub( /\"[A-Za-z0-9_\-\.]+\.(jpg|png|gif)\".+$/, ',' )
+         line = line.sub( /\"[A-Za-z0-9_\-\.]+\.(jpg|png|gif)\".+$/, ',,' )
 
          ## remove everything after url entry
          ##  e.g. "http://www.schlafly.com" or
          ##  "http://www.hertogjan.nl/site/"
          ##  note: keep commas
-         line = line.sub( /(,\"http:\/\/[^\"]+\",+).+$/, ',\1')
+         line = line.sub( /(,\"http:\/\/[^\"]+\",+).+$/, '\1')
 
 
          ## remove remain desc  / last column - MUST NOT be followed by comma

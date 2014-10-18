@@ -1,6 +1,13 @@
 # encoding: utf-8
 
 
+#####
+#  fix/todo:
+#   add nil/uncategorized to state
+#   - how to deal w/ unknown e.g. Virgin Islands (Us) ??? move to uncategorized or undefined/unknown?
+#
+
+
 require 'csv'
 require 'pp'
 require 'fileutils'
@@ -18,9 +25,11 @@ require './scripts/countries'
 
 require './scripts/breweries'
 require './scripts/beers'
+require './scripts/styles'
 require './scripts/list'
 require './scripts/csv'
 
+require './scripts/reader'
 
 
 ############################################
@@ -34,26 +43,23 @@ end
 
 
 
+task :chardet do
+  require 'rchardet19'
 
-def read_brewery_rows
-  hash = {}
+  data = 'Ã¤Ã¼Ã¶Ã¡Ã¶Å‚Ã³Ã­'   ## CP850  ??
+  cd = CharDet.detect(data)
+  pp cd
 
-  in_path = './o/breweries.csv'     ## 1414 rows
+  ## puts data
+  ## data.force_encoding( )
 
-  ## try a dry test run
-  i = 0
-  CSV.foreach( in_path, headers: true ) do |row|
-    i += 1
-    print '.' if i % 100 == 0
-    
-    by = Brewery.new
-    by.from_row( row )
-    hash[ row['id'] ] = by  ## index by id
-  end
-  puts " #{i} rows"
-  
-  hash  # return brewery map indexed by id
+  data = File.read( './dl/breweries.csv' )
+  cd = CharDet.detect(data)
+  pp cd
 end
+
+
+
 
 
 
@@ -239,47 +245,18 @@ end
 
 
 task :b do |t|    # check beers file
-  bymap = read_brewery_rows()
 
   in_path = './o/beers.csv'     ##  repaired  5901 rows (NOT repaired 5861 rows)
+
+  reader = BeerReader.new
+  beers  = reader.read( in_path )
 
   country_list = CountryList.new
 
   i = 0
-  CSV.foreach( in_path, headers: true ) do |row|
-    i += 1
-    print '.' if i % 100 == 0
-    
-    brewery_id = row['brewery_id']
-    by = bymap[brewery_id]
-    if by
-      b = Beer.new
-      b.brewery = by
-      b.from_row( row )
-
-      country = by.country
-      state   = by.state
-      if country.nil? && country == '?'
-        puts " *** row #{i} - country is nil; skipping: #{row.inspect}\n\n"
-        next  ## skip line; issue warning
-      end
-
-      if (state.nil? || state == '?') && country == 'United States'
-        puts " *** row #{i} - united states - state is nil; #{row.inspect}\n\n"
-      end
-
-      if (state.nil? || state == '?') && country == 'Belgium'
-        puts " *** row #{i} - belgium - state is nil; #{row.inspect}\n\n"
-      end
-
-      country_list.update_beer( b )
-    else
-      puts "** brewery #{i} with id >#{brewery_id}< not found; skipping beer row:"
-      pp row
-    end
+  beers.each do |b|
+    country_list.update_beer( b )
   end
-  puts " #{i} rows"
-
 
   ### pp usage.to_a
 
@@ -309,8 +286,8 @@ task :b do |t|    # check beers file
 
           if c.name == 'United States'
             # map file name
-            ## us_root = './o/us-united-states'
-            us_root = '../us-united-states'
+            us_root = './o/us-united-states'
+            ## us_root = '../us-united-states'
             us_state_dir = US_STATES[ state.name.downcase ]
 
             if us_state_dir
@@ -321,8 +298,8 @@ task :b do |t|    # check beers file
             end
           elsif c.name == 'Belgium'
             # map file name
-            ## be_root = './o/be-belgium'
-            be_root = '../be-belgium'
+            be_root = './o/be-belgium'
+            ## be_root = '../be-belgium'
             be_state_dir = BE_STATES[ state.name.downcase ]
 
             if be_state_dir
