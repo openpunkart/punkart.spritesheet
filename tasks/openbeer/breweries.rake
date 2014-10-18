@@ -9,12 +9,12 @@ task :by do |t|    # check breweries file
 
   # map file name
   us_root = './o/us-united-states'
-  ## be_root = './o/be-belgium'
-  ## de_root = './o/de-deutschland'
+  be_root = './o/be-belgium'
+  de_root = './o/de-deutschland'
 
   ## us_root = '../us-united-states'
-  be_root = '../be-belgium'
-  de_root = '../de-deutschland'
+  ## be_root = '../be-belgium'
+  ## de_root = '../de-deutschland'
 
 
   in_path = './o/breweries.csv'     ## 1414 rows
@@ -75,7 +75,23 @@ task :by do |t|    # check breweries file
     print '%-30s ' % c.name
     print ' :: %4d breweries' % c.count
     print "\n"
-        
+    
+    if c.name == 'United States'  ||
+       c.name == 'Belgium'        ||
+       c.name == 'Germany'
+      # do nothing; save states/provinces
+    else
+      country_key = COUNTRIES_MAPPING[ c.name ]
+      country_dir = COUNTRIES[ country_key ]
+      if country_dir
+        ## path = "./o/#{country_dir}/breweries.csv"
+        path = "../#{country_dir}/breweries.csv"
+        save_breweries( path, c.breweries )
+      else
+        puts "*** warn: no country mapping defined for >#{country_key}< >#{c.name}<"
+      end
+    end
+
     ## check for states:
     states_ary = c.states.to_a
     if states_ary.size > 0

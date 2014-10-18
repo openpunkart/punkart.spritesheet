@@ -44,6 +44,14 @@ class CountryItem
   end
 end # class CountryItem
 
+class BreweryCountryItem < CountryItem
+  attr_accessor :breweries
+
+  def initialize( name )
+    super( name )
+    @breweries = []
+  end
+end # class BreweryCountryItem
 
 class StatsCountryItem < CountryItem
   attr_accessor  :breweries,  ## number of breweries
@@ -153,8 +161,9 @@ class CountryList
 
   def update_brewery( by )
     country = by.country
-    line = @lines[ country ] || CountryItem.new( country )
+    line = @lines[ country ] || BreweryCountryItem.new( country )
     line.count +=1
+    line.breweries << by
 
     state = by.state
     if state.nil? || state == '?'
