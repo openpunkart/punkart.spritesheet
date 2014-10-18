@@ -1,6 +1,23 @@
 # encoding: utf-8
 
 
+task :chardet do
+  require 'rchardet19'
+
+  data = 'Ã¤Ã¼Ã¶Ã¡Ã¶Å‚Ã³Ã­'   ## CP850  ??
+  cd = CharDet.detect(data)
+  pp cd
+
+  ## puts data
+  ## data.force_encoding( )
+
+  data = File.read( './dl/breweries.csv' )
+  cd = CharDet.detect(data)
+  pp cd
+end
+
+
+
 
 task :repair => [:repairb,:repairby] do
 end

@@ -16,9 +16,14 @@ require 'fileutils'
 ##############
 # our own code
 
+require './scripts/csv'  # generic - move to lib for (re)use ??
+
+
 require './countries'
 require './country_us'
 require './country_be'
+require './country_de'
+require './country_ca'
 
 
 require './scripts/countries'
@@ -26,8 +31,6 @@ require './scripts/countries'
 require './scripts/breweries'
 require './scripts/beers'
 require './scripts/styles'
-require './scripts/list'
-require './scripts/csv'
 
 require './scripts/reader'
 
@@ -40,25 +43,6 @@ Dir.glob('./tasks/**/*.rake').each do |r|
   import r
   # see blog.smartlogicsolutions.com/2009/05/26/including-external-rake-files-in-your-projects-rakefile-keep-your-rake-tasks-organized/
 end
-
-
-
-task :chardet do
-  require 'rchardet19'
-
-  data = 'Ã¤Ã¼Ã¶Ã¡Ã¶Å‚Ã³Ã­'   ## CP850  ??
-  cd = CharDet.detect(data)
-  pp cd
-
-  ## puts data
-  ## data.force_encoding( )
-
-  data = File.read( './dl/breweries.csv' )
-  cd = CharDet.detect(data)
-  pp cd
-end
-
-
 
 
 
