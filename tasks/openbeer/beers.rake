@@ -4,12 +4,12 @@
 task :b do |t|    # check beers file
 
   us_root = './o/us-united-states'
-  be_root = './o/be-belgium'
-  de_root = './o/de-deutschland'
+  ## be_root = './o/be-belgium'
+  ## de_root = './o/de-deutschland'
 
   ## us_root = '../us-united-states'
-  ## be_root = '../be-belgium'
-  ## de_root = '../de-deutschland'
+  be_root = '../be-belgium'
+  de_root = '../de-deutschland'
 
 
   in_path = './o/beers.csv'     ##  repaired  5901 rows (NOT repaired 5861 rows)
