@@ -1,27 +1,25 @@
 # encoding: utf-8
 
 DE_STATES_MAPPING = {
- 'Bayern' => 'by',
- 'Bavaria' => 'by',
- 'Baden-Wurttemberg' => 'bw',
- 'Baden-Wrttemberg' => 'bw',
- 'Baden-WÃ¼rttemberg' => 'bw',     ## check/fix encoding  - what encoding??
+  'Bayern' => 'by',
+  'Bavaria' => 'by',
+  'Baden-Wurttemberg' => 'bw',
+  'Baden-Wrttemberg' => 'bw',
+  'Baden-WÃ¼rttemberg' => 'bw',     ## check/fix encoding  - what encoding??
+  'Nordrhein-Westfalen' => 'nw',
+  'Hessen' => 'he',
+  'Niedersachsen' => 'ni',
+  'Bremen' => 'hb',
+  'Brandenburg' => 'bb',
+  'Sachsen' => 'sn',
+  'Hamburg' => 'hh',
+  'ThÃ¼ringen' => 'th',   ## check/fix encoding  - what encoding??
+  'Berlin' => 'be',
+  'Rheinland-Pfalz' => 'rp',
+  'Schleswig-Holstein' => 'sh',
+  'Sachsen-Anhalt' => 'st',
 }
 
-=begin
- [3] nordrhein-westfalen               ::   37 beers
- [4] hessen                            ::   10 beers
- [5] niedersachsen                     ::    8 beers
- [6] bremen                            ::    7 beers
- [7] brandenburg                       ::    4 beers
- [8] sachsen                           ::    4 beers
- [9] hamburg                           ::    3 beers
-[10] th├â┬╝ringen                      ::    3 beers
-[12] berlin                            ::    2 beers
-[13] rheinland-pfalz                   ::    2 beers
-[14] schleswig-holstein                ::    2 beers
-[17] sachsen-anhalt                    ::    1 beers
-=end
 
 ## map german states to file name
 

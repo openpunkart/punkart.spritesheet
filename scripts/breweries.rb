@@ -124,6 +124,8 @@ class Brewery
                       mapping = US_STATES_MAPPING
                     elsif @country == 'Belgium'
                       mapping = BE_STATES_MAPPING
+                    elsif @country == 'Germany'
+                      mapping = DE_STATES_MAPPING
                     else
                       mapping = nil
                     end

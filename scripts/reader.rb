@@ -4,13 +4,15 @@
 
 class BeerReader
   
-  def initialize
-    ## todo: add path
+  def initialize( opts )
+    breweries_path   = opts[:breweries_path]   # e.g. './o/breweries.csv'
+    categories_path  = opts[:categories_path]  # e.g. './dl/categories.csv'
+    styles_path      = opts[:styles_path]      # e.g. './dl/styles.csv'
 
-    @bymap    = read_brewery_rows( './o/breweries.csv' )
-    
-    @catmap   = read_category_rows( './dl/categories.csv' )
-    @stylemap = read_style_rows( './dl/styles.csv', @catmap )
+    @bymap    = read_brewery_rows( breweries_path )
+
+    @catmap   = read_category_rows( categories_path )
+    @stylemap = read_style_rows( styles_path, @catmap )
   end
 
   def read( path )
