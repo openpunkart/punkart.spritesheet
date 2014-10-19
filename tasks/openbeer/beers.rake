@@ -4,12 +4,14 @@
 task :b do |t|    # check beers file
 
   us_root = './o/us-united-states'
-  ## be_root = './o/be-belgium'
-  ## de_root = './o/de-deutschland'
+  be_root = './o/be-belgium'
+  de_root = './o/de-deutschland'
+  ## ca_root = './o/ca-canada'
 
   ## us_root = '../us-united-states'
-  be_root = '../be-belgium'
-  de_root = '../de-deutschland'
+  ## be_root = '../be-belgium'
+  ## de_root = '../de-deutschland'
+  ca_root = '../ca-canada'
 
 
   in_path = './o/beers.csv'     ##  repaired  5901 rows (NOT repaired 5861 rows)
@@ -77,6 +79,15 @@ task :b do |t|    # check beers file
 
             if de_state_dir
               path = "#{de_root}/#{de_state_dir}/beers.csv"
+              save_beers( path, state.beers )
+            else
+              puts "*** warn: no state mapping defined for >#{state.name}<"
+            end
+          elsif c.name == 'Canada'
+            ca_state_dir = CA_STATES[ state.name.downcase ]
+
+            if ca_state_dir
+              path = "#{ca_root}/#{ca_state_dir}/beers.csv"
               save_beers( path, state.beers )
             else
               puts "*** warn: no state mapping defined for >#{state.name}<"

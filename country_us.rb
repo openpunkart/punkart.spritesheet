@@ -121,5 +121,6 @@ US_STATES = {
   'hi' => '9--hi-hawaii--pacific',
   'or' => '9--or-oregon--pacific',
   'wa' => '9--wa-washington--pacific', 
+  '?'  => '99--??--uncategorized',
 }
 

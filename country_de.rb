@@ -40,5 +40,7 @@ DE_STATES = {
  'hh' => '9--hh-hamburg--north',
  'mv' => '9--mv-mecklenburg-vorpommern--north',
  'sh' => '9--sh-schleswig-holstein--north',
+  '?'  => '99--??--uncategorized',
+
 }
 

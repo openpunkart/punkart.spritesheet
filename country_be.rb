@@ -29,6 +29,7 @@ BE_STATES = {
   'wht' => '3--wht-hainaut--wallonia',
   'wlg' => '3--wlg-liege--wallonia',
   'wlx' => '3--wlx-luxembourg--wallonia',
-  'wna' => '3--wna-namur--wallonia',  
+  'wna' => '3--wna-namur--wallonia',
+  '?'   => '99--??--uncategorized',
 }
 
