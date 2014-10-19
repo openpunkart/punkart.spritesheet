@@ -11,12 +11,12 @@ task :by do |t|    # check breweries file
   us_root = './o/us-united-states'
   be_root = './o/be-belgium'
   de_root = './o/de-deutschland'
-  ## ca_root = './o/ca-canada'
+  ca_root = './o/ca-canada'
 
   ## us_root = '../us-united-states'
   ## be_root = '../be-belgium'
   ## de_root = '../de-deutschland'
-  ca_root = '../ca-canada'
+  ## ca_root = '../ca-canada'
 
   in_path = './o/breweries.csv'     ## 1414 rows
 
