@@ -1,6 +1,9 @@
 # encoding: utf-8
 
 
+## fix: rename to build brewery_map
+##    use/reuse  read_breweries_openbeer
+
 def read_brewery_rows( path )
   hash = {}
 
@@ -34,13 +37,20 @@ def save_breweries( path, breweries )
     value
   end
 
+
   File.open( path, 'w' ) do |file|
     ## write csv headers
-    file.puts ['Name','Address', 'City', 'State', 'Code', 'Website'].join(',')
+    file.puts ['Name','Address', 'City', 'State', 'Code', 'Website', 'Tags'].join(',')
 
     ## write records
     breweries.each do |by|
-      file.puts [by.name,by.address,by.city,by.state,by.code,by.website].join(',')
+      file.puts [by.name,
+                 by.address,
+                 by.city,
+                 by.state_code.upcase,
+                 by.postal_code,
+                 by.website,
+                 by.tags].join(',')
     end
   end
 end  # method save_breweries
@@ -52,17 +62,143 @@ class Brewery
               :address,
               :city,
               :state,
-              :code,  # postal code
+              :state_code,    # eg. tx,b,bru,n,on, etc.
+              :postal_code,   # postal code
               :country,
-              :website
+              :country_code,  # e.g. at,ca,us,eng,wal,etc.
+              :website,
+              :tags    # e.g. brewery,brewpub,nanobrewery,contract,etc.
 
   def closed?
     @closed == true
   end
 
   def initialize
-    @closed = false   # default; brewery NOT closed, that is, it's open
+    @closed      = false   # default; brewery NOT closed, that is, it's open
+    
+    @address      = '?'
+    @postal_code  = '?'
+    @state_code   = '?'
+    @country_code = '?'
+    @tags         = '?'
   end
+
+
+  def norm_name( txt )
+    ## NOTE: replace commas in name, addresses w/ pipe (|)
+    txt  = txt.gsub(',',' |')
+
+    # name cleanup
+    #   remove trailing
+    #       ,_LLC
+    #       ,_Inc.
+    #       _LLC
+
+    txt = txt.sub( /,\s*LLC$/, '' )
+    txt = txt.sub( /,\s*Inc\.$/, '' )
+    txt = txt.sub( /\s+LLC$/, '' )
+
+    ##
+    # fix: do NOT include brewery if marked (Closed) in name
+    if txt =~ /\(Closed\)/    # check for closed marker e.g (Closed)
+      @closed = true
+    end
+    txt
+  end
+
+  def norm_city( txt )
+    if txt
+      txt = txt.sub('(no address available)', '')
+      txt = txt.strip
+      txt
+    else
+      '?'
+    end
+  end
+
+  def norm_website( txt )
+    if txt
+      ## NOTE: cleanup url - remove leading http:// or https://
+      txt = txt.sub( /^(http|https):\/\//, '' )
+      txt = txt.sub( /\/$/, '' )  # remove trailing slash (/)
+      txt
+    else
+      '?'
+    end
+  end
+  
+
+
+  def map_state( txt )
+    ## todo/fix:
+    ##   warn if txt is nil?  no state defined/present for mapping
+    #      different from no mapping found
+    return '?' if txt.nil?
+    
+    if @country == 'United States'
+      mapping = US_STATES_MAPPING
+    elsif @country == 'Belgium'
+      mapping = BE_STATES_MAPPING
+    elsif @country == 'Germany'
+      mapping = DE_STATES_MAPPING
+    elsif @country == 'Canada'
+      mapping = CA_STATES_MAPPING
+    else
+     mapping = nil
+    end
+
+    if mapping
+      txt = txt.gsub( ',' ,'' ) # remove any commas if present
+      txt = txt.gsub( '|' ,'' ) # remove escaped commas if present
+      txt = txt.sub( '(no address available)', '' )
+      txt = txt.strip  # remove leading n trailing spaces
+
+      key = mapping[ txt ]
+      if key.nil?
+        puts "*** warn: no states mapping for >#{txt}< / >#{@country}<"
+        '?'
+      else
+        key
+      end
+    else
+      '?'
+    end
+  end
+
+
+  def from_row_ca( row )
+#  "Name": "5 Paddles Brewing",
+#  "City": "Whitby",
+#  "Province": "ON",
+#  "URL": "http://5paddlesbrewing.com/",
+#  "Facebook": "https://www.facebook.com/5PaddlesBrewingCompany",
+#  "Twitter": "https://twitter.com/5PaddlesBrewing",
+#  "Type": "Brewery",
+# "marker-color": "#f00"
+
+    @name     = row['Name']
+    @city     = row['City']
+    @state    = row['Province']
+    @website  = row['URL']
+
+    @postal_code  = '?'
+    @address      = '?'
+    @country      = 'Canada'
+    @country_code = 'ca'
+
+    ## make Type e.g. Brewery,Brewpub,Brewpub Chain,Nanobrewery, etc. into a tag
+    tagcand =  row['Type']
+    @tags = tagcand.downcase.gsub(' ','_')
+
+    @name    = norm_name( @name )
+    @city    = norm_city( @city )
+    @website = norm_website( @website )
+
+    @state_code = map_state( @state )
+
+    self   # NOTE: return self (to allow method chaining)
+  end
+
 
   def from_row( row )
 # "id","name","address1","address2",
@@ -73,14 +209,14 @@ class Brewery
 #   "Austin","Texas","78745","United States","512.707.2337",
 #     "http://512brewing.com/",,"(512) Brewing Company is a microbrewery located in the heart of Austin that brews for the community using as many local, domestic and organic ingredients as possible.","2010-07-22 20:00:20"
 
-    @name     = row['name']
-    @city     = row['city']
-    @state    = row['state']
-    @code     = row['code']
-    @country  = row['country']
-    @website  = row['website']
+    @name        = row['name']
+    @city        = row['city']
+    @state       = row['state']
+    @postal_code = row['code']
+    @country     = row['country']
+    @website     = row['website']
 
-    @address  = row['address1']
+    @address     = row['address1']
 
     ### NOTE: address2 used only 4 out of 1414 recs in open beer db
     ## merge into one if present use | for now; use // later ?
@@ -90,26 +226,6 @@ class Brewery
     #  1408 => >1000 Murray Ross Parkway<
     address2 = row['address2']
 
-    ## NOTE: replace commas in name, addresses w/ pipe (|)
-    
-    ##
-    # fix: do NOT include brewery if marked (Closed) in name
-
-    # name cleanup
-    #   remove trailing
-    #       ,_LLC
-    #       ,_Inc.
-    #       _LLC
-
-    @name = @name.sub( /,\s*LLC$/, '' )
-    @name = @name.sub( /,\s*Inc\.$/, '' )
-    @name = @name.sub( /\s+LLC$/, '' )
-
-    @name      = @name.gsub(',',' |')
-
-    if @name =~ /\(Closed\)/    # check for closed marker e.g (Closed)
-      @closed = true
-    end
 
     @address  =  @address ? @address.gsub(',',' |') : '?'
 
@@ -118,43 +234,14 @@ class Brewery
       @address << " | #{address2}"
     end
 
-    @city      = @city     ? @city : '?'
-    @state     = if @state
-                    if @country == 'United States'
-                      mapping = US_STATES_MAPPING
-                    elsif @country == 'Belgium'
-                      mapping = BE_STATES_MAPPING
-                    elsif @country == 'Germany'
-                      mapping = DE_STATES_MAPPING
-                    elsif @country == 'Canada'
-                      mapping = CA_STATES_MAPPING
-                    else
-                      mapping = nil
-                    end
+    @name        = norm_name( @name )
+    @city        = norm_city( @city )
+    @state_code  = map_state( @state )
 
-                    if mapping
-                      state_abbrev = mapping[ @state ]
-                      if state_abbrev.nil?
-                        puts "*** warn: no states mapping for >#{@state}< / >#{@country}<"
-                        @state   ## check: what to return; keep unmapped state or use ? ???
-                      else
-                        state_abbrev.upcase
-                      end
-                    else
-                      @state
-                    end
-                 else
-                   '?'
-                 end
     @code      = @code ? @code : '?'    ## postal code / zip code
-    @website   = if @website
-                    ## NOTE: cleanup url - remove leading http:// or https://
-                    @website = @website.sub( /^(http|https):\/\//, '' )
-                    @website = @website.sub( /\/$/, '' )  # remove trailing slash (/)
-                    @website
-                  else
-                    '?'
-                  end
+
+
+    @website   = norm_website( @website )
 
     self   # NOTE: return self (to allow method chaining)
   end

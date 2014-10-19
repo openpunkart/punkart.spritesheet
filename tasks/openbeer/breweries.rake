@@ -5,22 +5,20 @@
 # note/todo:
 ##  breweries - same name possible for record!! - add city to make "unique"
 
-task :by do |t|    # check breweries file
 
-  in_path = './o/breweries.csv' 
+def read_breweries_openbeer( path )
+  ary = []
 
   ## try a dry test run
   i = 0
-  CSV.foreach( in_path, headers: true ) do |row|
+  CSV.foreach( path, headers: true ) do |row|
     i += 1
     print '.' if i % 100 == 0
   end
   puts " #{i} rows"
 
-
-  country_list = CountryList.new
   i = 0
-  CSV.foreach( in_path, headers: true ) do |row|
+  CSV.foreach( path, headers: true ) do |row|
     i += 1
     print '.' if i % 100 == 0
 
@@ -44,10 +42,27 @@ task :by do |t|    # check breweries file
       puts "*** row #{i} - skip closed brewery >#{by.name}<"
       next ## skip closed breweries; issue warning
     end
+    ary << by
+  end
+  ary
+end
 
+
+task :by do |t|    # check breweries file
+
+  breweries = []
+  
+  breweries += read_breweries_openbeer( './o/breweries.csv'  )
+  breweries += read_breweries_ca( './dl/ca/breweries.geojson' )
+
+
+
+  country_list = CountryList.new
+  
+  breweries.each_with_index do |by,i|
+    print '.' if i % 100 == 0
     country_list.update_brewery( by )
   end
-
 
 
   ### pp usage.to_a

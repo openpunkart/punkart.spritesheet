@@ -97,7 +97,7 @@ class StateList
 
   def update_beer( b )
     country = b.brewery.country
-    state   = b.brewery.state.downcase   # todo: check for nil?
+    state   = b.brewery.state_code   # todo: check for nil?
    
     if country == 'United States' || country == 'Belgium'
      ## puts " update_beer  #{state} / #{country}"
@@ -115,7 +115,7 @@ class StateList
 
   def update_brewery( by )
     ## country = by.country
-    state   = by.state
+    state   = by.state_code
 
     line = @lines[ state ] || BreweryStateItem.new( state )
 
@@ -159,7 +159,7 @@ class CountryList
     line.count +=1
     line.beers << b
 
-    state = b.brewery.state
+    state = b.brewery.state_code
     if state.nil? || state == '?'
       ## do nothing for now (add to uncategorized state ???)
     else
@@ -175,7 +175,7 @@ class CountryList
     line.count +=1
     line.breweries << by
 
-    state = by.state
+    state = by.state_code
     if state.nil? || state == '?'
       ## do nothing for now (add to uncategorized state ???)
     else

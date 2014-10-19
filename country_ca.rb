@@ -2,14 +2,27 @@
 
 CA_STATES_MAPPING = {
   'British Columbia' => 'bc',
-  'Ontario'          => 'on',
-  'ON'               => 'on',
-  'Quebec'           => 'qc',
   'Alberta'          => 'ab',
+  'Saskatchewan'     => 'sk',
   'Manitoba'         => 'mb',
+  'Ontario'          => 'on',
+  'Quebec'           => 'qc',
   'New Brunswick'    => 'nb',
   'Nova Scotia'      => 'ns',
-  'Saskatchewan'     => 'sk',
+  'BC'               => 'bc',
+  'AB'               => 'ab',
+  'SK'               => 'sk',
+  'MB'               => 'mb',
+  'ON'               => 'on',
+  'QC'               => 'qc',
+  'NB'               => 'nb',
+  'NS'               => 'ns',
+  'PE'               => 'pe',
+  'PEI'              => 'pe',
+  'NL'               => 'nl',
+  'YT'               => 'yt',
+  'NT'               => 'nt',
+  'NU'               => 'nu',
 }
 
 
