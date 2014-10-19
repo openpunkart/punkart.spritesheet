@@ -1,21 +1,17 @@
 # encoding: utf-8
 
 
-## fix: rename to build brewery_map
-##    use/reuse  read_breweries_openbeer
 
-def read_brewery_rows( path )
+def build_brewery_map( path )    ## use (rename to) build_breweries_map (plural) why? why not?
   hash = {}
+  breweries = read_breweries_openbeer( path )
 
-  ## try a dry test run
   i = 0
-  CSV.foreach( path, headers: true ) do |row|
+  breweries.each do |by|
     i += 1
     print '.' if i % 100 == 0
 
-    by = Brewery.new
-    by.from_row( row )
-    hash[ row['id'] ] = by  ## index by id
+    hash[ by.id ] = by  ## index by id
   end
   puts " #{i} rows"
   
@@ -58,7 +54,9 @@ end  # method save_breweries
 
 class Brewery
 
-  attr_reader :name,
+  # note: all fields/attribs are strings
+  attr_reader :id,
+              :name,
               :address,
               :city,
               :state,
@@ -209,6 +207,7 @@ class Brewery
 #   "Austin","Texas","78745","United States","512.707.2337",
 #     "http://512brewing.com/",,"(512) Brewing Company is a microbrewery located in the heart of Austin that brews for the community using as many local, domestic and organic ingredients as possible.","2010-07-22 20:00:20"
 
+    @id          = row['id']
     @name        = row['name']
     @city        = row['city']
     @state       = row['state']
@@ -236,6 +235,29 @@ class Brewery
 
     @name        = norm_name( @name )
     @city        = norm_city( @city )
+
+    ### special cases for country/state
+    if @country == 'United States'
+      if @state == 'Virgin Islands'
+        @country = 'US Virgin Islands'
+        @state   = '?'
+      end
+    elsif @country == 'United Kingdom'
+      if @state == 'Scotland'
+        @country = 'Scotland'
+        @state   = '?'
+      elsif @state == 'Wales'
+        @country = 'Wales'
+        @state   = '?'
+      else
+        ## assume england
+        @country = 'England'
+      end
+    else
+      # do nothing; no special case
+    end
+
+
     @state_code  = map_state( @state )
 
     @code      = @code ? @code : '?'    ## postal code / zip code

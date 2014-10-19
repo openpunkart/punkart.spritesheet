@@ -9,7 +9,7 @@ class BeerReader
     categories_path  = opts[:categories_path]  # e.g. './dl/categories.csv'
     styles_path      = opts[:styles_path]      # e.g. './dl/styles.csv'
 
-    @bymap    = read_brewery_rows( breweries_path )
+    @bymap    = build_brewery_map( breweries_path )
 
     @catmap   = read_category_rows( categories_path )
     @stylemap = read_style_rows( styles_path, @catmap )

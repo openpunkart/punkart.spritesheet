@@ -81,7 +81,7 @@ COUNTRIES_MAPPING = {
   'Cuba'       =>  'cu',
   'Aruba'      =>  'aw',
   'Jamaica'   => 'jm',
-  'Virgin Islands'  => 'vi',  # assume US Virgin Islands for now
+  'US Virgin Islands'  => 'vi',
 
   'Egypt'      =>  'eg',
   'Kenya'     => 'ke',

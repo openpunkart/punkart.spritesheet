@@ -96,21 +96,16 @@ class StateList
   end
 
   def update_beer( b )
-    country = b.brewery.country
+    ## country = b.brewery.country
     state   = b.brewery.state_code   # todo: check for nil?
    
-    if country == 'United States' || country == 'Belgium'
-     ## puts " update_beer  #{state} / #{country}"
-    end
+    ## note: include uncategorized (beers/breweries w/o state) to uncategorized
+    line = @lines[ state ] || BeerStateItem.new( state )
 
-    if state && state != '?'
-      line = @lines[ state ] || BeerStateItem.new( state )
+    line.count +=1
+    line.beers << b
 
-      line.count +=1
-      line.beers << b
-
-      @lines[ state ] = line
-    end
+    @lines[ state ] = line
   end
 
   def update_brewery( by )
@@ -175,12 +170,9 @@ class CountryList
     line.count +=1
     line.breweries << by
 
-    state = by.state_code
-    if state.nil? || state == '?'
-      ## do nothing for now (add to uncategorized state ???)
-    else
-      line.states.update_brewery( by )   ## also track states e.g texas, california (US) etc.
-    end
+    ## state = by.state_code
+    ### note: add breweries w/o state or undefined state to unclassified for now 
+    line.states.update_brewery( by )   ## also track states e.g texas, california (US) etc.
 
     @lines[ country ] = line
   end
