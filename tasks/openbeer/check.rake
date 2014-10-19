@@ -3,7 +3,7 @@
 
 
 task :checkby do |t|    # check breweries file
-  in_path = './o/breweries.csv'     ## 1414 rows
+  in_path = './o/breweries.csv'
 
   ## try a dry test run
   i = 0

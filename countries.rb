@@ -1,5 +1,21 @@
 # encoding: utf-8
 
+STATES_MAPPING_BY_COUNTRY = {
+  'be' => BE_STATES_MAPPING,
+  'de' => DE_STATES_MAPPING,
+  'ca' => CA_STATES_MAPPING,
+  'us' => US_STATES_MAPPING,
+}
+
+STATES_BY_COUNTRY = {
+  'be' => BE_STATES,
+  'de' => DE_STATES,
+  'ca' => CA_STATES,
+  'us' => US_STATES, 
+}
+
+
+
 COUNTRIES_MAPPING = {
   'United States' => 'us',
   'Canada'        => 'ca',

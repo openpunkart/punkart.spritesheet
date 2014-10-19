@@ -3,17 +3,6 @@
 
 task :b do |t|    # check beers file
 
-  us_root = './o/us-united-states'
-  be_root = './o/be-belgium'
-  de_root = './o/de-deutschland'
-  ## ca_root = './o/ca-canada'
-
-  ## us_root = '../us-united-states'
-  ## be_root = '../be-belgium'
-  ## de_root = '../de-deutschland'
-  ca_root = '../ca-canada'
-
-
   in_path = './o/beers.csv'     ##  repaired  5901 rows (NOT repaired 5861 rows)
 
   reader = BeerReader.new(
@@ -45,7 +34,25 @@ task :b do |t|    # check beers file
     print '%-30s ' % c.name
     print ' :: %4d beers' % c.count
     print "\n"
-        
+
+    if ['United States',
+        'Belgium',
+        'Germany',
+        'Canada'].include?( c.name )
+      # do nothing; save states/provinces
+    else
+      country_key = COUNTRIES_MAPPING[ c.name ]
+      country_dir = COUNTRIES[ country_key ]
+      if country_dir
+        ## note: remove world from path (country_dir)
+        path = "#{WORLD_ROOT}/#{country_dir.sub('world/','')}/beers.csv"
+        save_beers( path, c.beers )
+      else
+        puts "*** warn: no country mapping defined for >#{country_key}< >#{c.name}<"
+      end
+    end
+
+
     ## check for states:
     states_ary = c.states.to_a
     if states_ary.size > 0
@@ -60,7 +67,7 @@ task :b do |t|    # check beers file
             us_state_dir = US_STATES[ state.name.downcase ]
 
             if us_state_dir
-              path = "#{us_root}/#{us_state_dir}/beers.csv"
+              path = "#{US_ROOT}/#{us_state_dir}/beers.csv"
               save_beers( path, state.beers )
             else
               puts "*** warn: no state mapping defined for >#{state.name}<"
@@ -69,7 +76,7 @@ task :b do |t|    # check beers file
             be_state_dir = BE_STATES[ state.name.downcase ]
 
             if be_state_dir
-              path = "#{be_root}/#{be_state_dir}/beers.csv"
+              path = "#{BE_ROOT}/#{be_state_dir}/beers.csv"
               save_beers( path, state.beers )
             else
               puts "*** warn: no state mapping defined for >#{state.name}<"
@@ -78,7 +85,7 @@ task :b do |t|    # check beers file
             de_state_dir = DE_STATES[ state.name.downcase ]
 
             if de_state_dir
-              path = "#{de_root}/#{de_state_dir}/beers.csv"
+              path = "#{DE_ROOT}/#{de_state_dir}/beers.csv"
               save_beers( path, state.beers )
             else
               puts "*** warn: no state mapping defined for >#{state.name}<"
@@ -87,7 +94,7 @@ task :b do |t|    # check beers file
             ca_state_dir = CA_STATES[ state.name.downcase ]
 
             if ca_state_dir
-              path = "#{ca_root}/#{ca_state_dir}/beers.csv"
+              path = "#{CA_ROOT}/#{ca_state_dir}/beers.csv"
               save_beers( path, state.beers )
             else
               puts "*** warn: no state mapping defined for >#{state.name}<"
@@ -105,3 +112,4 @@ task :b do |t|    # check beers file
 
   puts 'done'
 end  # task :b
+

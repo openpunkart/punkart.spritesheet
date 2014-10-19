@@ -19,11 +19,13 @@ require 'fileutils'
 require './scripts/csv'  # generic - move to lib for (re)use ??
 
 
-require './countries'
+require './settings'
+
 require './country_us'
 require './country_be'
 require './country_de'
 require './country_ca'
+require './countries'
 
 
 require './scripts/countries'
